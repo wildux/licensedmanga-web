@@ -1,0 +1,2 @@
+# licensedmanga-web
+Licensed Manga
