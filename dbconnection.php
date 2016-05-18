@@ -1,8 +1,8 @@
 <?php
     // DB INFO
     $servername = "localhost";
-    $username = "root";
-    $password = "joruntu";
+    $username = "username";
+    $password = "password";
     $dbname = "manga";     
     //$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
      
