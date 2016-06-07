@@ -1,5 +1,4 @@
 <?php	
-	include('dbconnection.php');
 	require_once('includes/config.php');
 ?>
 
@@ -111,7 +110,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -202,7 +201,7 @@
 </nav>
 
 
-<div class="container">
+<div class="container-fluid col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
 	
 <!-- SHOW ERRORS -->
 <?php 
@@ -214,6 +213,7 @@ if (!empty($_SESSION['error'])) {
 }
 ?>
 
+<br>
 <?php	
 	
 	$month = filter_input(INPUT_GET, 'month', FILTER_VALIDATE_INT, ['options'=>['min_range' => 1    , 'max_range' => 12]]);
@@ -229,8 +229,7 @@ if (!empty($_SESSION['error'])) {
 	}
 		
 		$interval = new DateInterval('P1M');
-		$previous = $date->sub($interval);		
-		
+		$previous = $date->sub($interval);				
 		
 		echo "<div class='panel' style='border-color:#9dc059'><div class='panel-body' style='font-size: 18px; '>
 		<p style='float: left; width: 33.3%; text-align: left; margin: auto'> <a href='/calendar/".$previous->format("n"). "/".$previous->format("Y")."'>
@@ -240,15 +239,15 @@ if (!empty($_SESSION['error'])) {
 						
 		$next = $date->add($interval);
 		echo "<p style='float: left; width: 33.3%; text-align: right; margin: auto'> <a href='/calendar/".$next->format("n"). "/".$next->format("Y")."'>
-		Next <span class='glyphicon glyphicon-chevron-right' aria-hidden='true'></span></a></p></div></div><br><br>";
+		Next <span class='glyphicon glyphicon-chevron-right' aria-hidden='true'></span></a></p></div></div><br>";
 		
-		$sql = "SELECT volumes.id_serie,volumes.number,volumes.release_date,volumes.type,series.title FROM volumes JOIN series ON volumes.id_serie = series.id 
-		AND extract(YEAR_MONTH from volumes.release_date) = ".$year.$date->format("m")." ORDER BY volumes.release_date";
+		$result = $db->prepare("SELECT volumes.id_serie,volumes.number,volumes.release_date,volumes.type,series.title FROM volumes JOIN series ON volumes.id_serie = series.id 
+		AND extract(YEAR_MONTH from volumes.release_date) =:month ORDER BY volumes.release_date");
 		
-		$result = $conn->query($sql);
+		$result->execute(array('month' => $year.$date->format("m")));
 		
-		if ($result->num_rows > 0) {
-			$row = $result->fetch_assoc();
+		if ($result->rowCount() > 0) {
+			$row = $result->Fetch();
 			$release_date = $row["release_date"];		   
 		    if (substr_compare($release_date,'00',8,2) == 0) $release_date = "TBA";
 			echo "<div class='panel' id='panel'><div class='panel-heading' id='panel-heading'>" .$release_date. "</div><div class='panel-body' id='panel-body'><div class='myTable'>";
@@ -262,7 +261,7 @@ if (!empty($_SESSION['error'])) {
 					echo "</a>";
 					
 				}
-			while($row = $result->fetch_assoc()) {
+			while($row = $result->Fetch()) {
 				$release_date2 = $row["release_date"];
 				if (substr_compare($release_date2,'00',8,2) == 0) $release_date2 = "TBA";
 				if($release_date !== $release_date2) {            
@@ -282,7 +281,6 @@ if (!empty($_SESSION['error'])) {
 			echo "</div></div></div>";
 		} 
 		else echo "0 results"; 
-
 ?>
 
 </div>

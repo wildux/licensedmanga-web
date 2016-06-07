@@ -5,7 +5,7 @@
 		array("Josei","#993366",2),
 		array("Shonen","#72a37c",3),
 		array("Seinen","#1A4D31",4),
-		array("Kodomo","SteelBlue",5),
+		array("Kids","SteelBlue",5),
 		array("Yuri","#886699",6),
 		array("BL","#5B2F6B",7),
 		array("Manhua","#9e7851",8),
@@ -13,6 +13,6 @@
 		array("Novel","#DAA520",10),
 		array("Hentai","Crimson",11),
 		array("Artbook","#214566",12),		
-		array("International/OEL","#999999",13),
+		array("International","#999999",13),
 		array("Other","#595959",14)
 	); 

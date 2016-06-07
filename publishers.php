@@ -1,5 +1,4 @@
-<?php	
-	include('dbconnection.php');
+<?php		
 	require_once('includes/config.php');
 ?>
 
@@ -116,7 +115,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -206,7 +205,7 @@
   
 </nav>
 
-<div class="container-fluid col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
+<div class="container-fluid col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
 	
 <!-- SHOW ERRORS -->
 <?php 
@@ -219,10 +218,16 @@ if (!empty($_SESSION['error'])) {
 
 //<!-- SQL -->
 	$type = filter_input(INPUT_GET,"type",FILTER_SANITIZE_STRING);
-	if($type == "0" || $type == "1") $sql = "SELECT id,name,state,location FROM publishers WHERE original='".$type."'  ORDER BY name";
-	else $sql = "SELECT id,name,state,location FROM publishers ORDER BY name";
-	$result = $conn->query($sql);
-    $publishers = $result->num_rows;
+	if($type == "0" || $type == "1") {
+		$result = $db->prepare("SELECT id,name,state,location FROM publishers WHERE original=:tp ORDER BY name");
+		$result->execute(array(':tp' => $type));	
+	}
+	else {
+		$sql = "SELECT id,name,state,location FROM publishers ORDER BY name";
+		$result = $db->query($sql);
+		
+	}	
+    $publishers = $result->rowCount();
 	echo "<h2>Publishers <span class='badge'>".$publishers."</span></h2>";
 ?>
 
@@ -291,8 +296,8 @@ if (!empty($_SESSION['error'])) {
 <?php	
 	
 	
-	if ($result->num_rows > 0) {
-		$row = $result->fetch_assoc();
+	if ($publishers > 0) {
+		$row = $result->Fetch();
 		$name = $row["name"];
 		$location = $row["location"];
 		$initial = $name[0];
@@ -313,7 +318,7 @@ if (!empty($_SESSION['error'])) {
 		<meta itemprop='name' content='".$name."'>
 		<meta itemprop='address' content='".$location."'>
 		<div class='label label-".$label."' style='float:right'>".$state."</div></span></a>";
-		while($row = $result->fetch_assoc()) {
+		while($row = $result->Fetch()) {
 			$name = $row["name"];
 			$state = $row["state"];
 			$location = $row["location"];

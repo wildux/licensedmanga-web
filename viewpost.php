@@ -97,7 +97,7 @@ if($row['postID'] == ''){
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>

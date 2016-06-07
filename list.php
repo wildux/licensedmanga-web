@@ -1,5 +1,4 @@
-<?php			
-	include('dbconnection.php');
+<?php				
 	include('manga_types.php'); 	
 	require_once('includes/config.php');
 ?>
@@ -129,7 +128,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -237,16 +236,27 @@ if (!empty($_SESSION['error'])) {
 	$num = filter_input(INPUT_GET,"type",FILTER_SANITIZE_STRING);
 	$st = filter_input(INPUT_GET,"state",FILTER_SANITIZE_STRING);
 	if (!empty($num) && ctype_digit($num) && $num < sizeof($types)) {
-		if(!empty($st) && ctype_digit($st) && $st < 7) $sql = "SELECT id,title,state FROM series WHERE type='".$types[$num][2]."' and state='".$st."' ORDER BY title";
-		else $sql = "SELECT id,title,state FROM series WHERE type='".$types[$num][2]."' ORDER BY title";
+		if(!empty($st) && ctype_digit($st) && $st < 7) {
+			$result = $db->prepare("SELECT id,title,state FROM series WHERE type=:tp and state=:st ORDER BY title");
+			$result->execute(array(':tp' => $types[$num][2], ':st' => $st));
+		}
+		else {
+			$result = $db->prepare("SELECT id,title,state FROM series WHERE type=:tp ORDER BY title");
+			$result->execute(array(':tp' => $types[$num][2]));
+		}
 	}
     else {			
-				$num = 0;
-        if(!empty($st) && ctype_digit($st) && $st < 7) $sql = "SELECT id,title,state FROM series WHERE state='".$st."' ORDER BY title";
-        else $sql = "SELECT id,title,state FROM series ORDER BY title";
-	}
-    $result = $conn->query($sql);
-    $series = $result->num_rows;
+		$num = 0;
+        if(!empty($st) && ctype_digit($st) && $st < 7) {
+			$result = $db->prepare("SELECT id,title,state FROM series WHERE state=:st ORDER BY title");
+			$result->execute(array(':st' => $st));
+		}
+        else {
+			$sql = "SELECT id,title,state FROM series ORDER BY title";
+			$result = $db->query($sql);
+		}
+	}    
+    $series = $result->rowCount();
 	echo "<h2>".$types[$num][0]." <span class='badge'>".$series."</span></h2>";
 	
 ?>
@@ -328,14 +338,6 @@ if (!empty($_SESSION['error'])) {
   <!--/div -->
   
   
-<!-- The navbar - The <a> elements are used to jump to a section in the scrollable area -->
-
-
-<!-- asdfaf -->
-
-
-   
-
 
 
   <div class="tab-content" data-spy="scroll" data-target="#alphabet">
@@ -344,9 +346,9 @@ if (!empty($_SESSION['error'])) {
     <?php   
 		
 
-            if ($result->num_rows > 0) {
+            if ($series > 0) {
        
-                $row = $result->fetch_assoc();
+                $row = $result->Fetch();
 				$title = $row["title"];
                 $initial = $title[0];
                 if(ctype_digit($initial)) $initial = '#';
@@ -383,7 +385,7 @@ if (!empty($_SESSION['error'])) {
                 echo "<section id='".$initial."'><div class='panel'><div class='panel-heading' style='background:".$types[$num][1].";color:White'>" .$initial. "</div><div class='panel-body' style='border-color:".$types[$num][1]."'><div class='myTable'>";
                 echo "<a class='col-lg-6 col-md-6 col-sm-12 col-xs-12' href='/series/".$row["id"]."'><span>".$title."</span>";
 				echo "<span class='label label-".$label."' style='float:right'>".$state."</span></a>";
-                while($row = $result->fetch_assoc()) {
+                while($row = $result->Fetch()) {
                      $title = $row["title"];
                      $state = $row["state"];
 				     switch ($state) {

@@ -1,5 +1,4 @@
 <?php
-	include('dbconnection.php');
 	include('manga_types.php');
 	require_once('includes/config.php');
 	
@@ -7,11 +6,11 @@
 	
 	if (!empty($num) && ctype_digit($num))
 	{	
-		$sql = "SELECT name,YEAR(year) AS year,location,web,comments FROM publishers WHERE id='".$num."'";
-		$result = $conn->query($sql);
+		$result = $db->prepare("SELECT name,YEAR(year) AS year,location,web,comments FROM publishers WHERE `id`=:id");
+		$result->execute(array(':id' => $num));		
 		
-		if ($result->num_rows > 0) {	
-			$row = $result->fetch_assoc();
+		if ($result->rowCount() > 0) {	
+			$row = $result->Fetch();
 			$name = $row["name"];
 			$year = $row["year"];
 			$location = $row["location"];
@@ -89,6 +88,24 @@
 	  }]
 	}
 	</script>
+	
+	<style>
+		.table a:hover {
+			color: white;
+			background-color: #aabec8;
+			text-decoration:none;
+		}			
+		.table a { 	  		  		
+		  padding: 12px;		  	  
+		  display: block;
+		  height: 100%;	
+		  
+		}	
+		.table>tbody>tr>td {
+			padding: 0px;
+		}	
+		
+	</style>
 </head>
 
 <body>
@@ -96,7 +113,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -186,7 +203,7 @@
   
 </nav>
 
-<div class="container">
+<div class="container-fluid col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
 	
 <script>  
 	function updateUrlParameter(uri, key, value) {
@@ -255,17 +272,19 @@ if (!empty($_SESSION['error'])) {
 			</div>";
 						
 			if (!empty($tp) && ctype_digit($tp) && $tp < sizeof($types)) {
-				$sql2 = "SELECT id,title FROM series WHERE type='".$tp."' AND (publisher_id='".$num."' OR orig_publisher_id='".$num."') ORDER BY title";
-				$tp_name = $types[$tp][0];				
+				$result2 = $db->prepare("SELECT id,title FROM series WHERE type=:tp AND (publisher_id=:id OR orig_publisher_id=:id2) ORDER BY title");
+				$tp_name = $types[$tp][0];	
+				$result2->execute(array(':id' => $num, ':id2' => $num, ':tp' => $tp));			
 			}
 			else {
 				$tp_name = "series";
-				$sql2 = "SELECT id,title FROM series WHERE publisher_id='".$num."' OR orig_publisher_id='".$num."' ORDER BY title";
+				$result2 = $db->prepare("SELECT id,title FROM series WHERE publisher_id=:id OR orig_publisher_id=:id2 ORDER BY title");
+				$result2->execute(array(':id' => $num, ':id2' => $num));
 			} 
 			
-			$result2 = $conn->query($sql2);
+			$numSeries = $result2->rowCount();
 			
-			echo "<br><h3>Published ".$tp_name." <span class='badge'>".$result2->num_rows."</span>";
+			echo "<br><h3>Published ".$tp_name." <span class='badge'>".$numSeries."</span>";
 			
 			if($user->is_admin()) echo "
 			<div class='btn-group' style='float:right'>
@@ -287,25 +306,18 @@ if (!empty($_SESSION['error'])) {
 				}		   
 			echo "</div><br><br>";
 				
-			if ($result2->num_rows > 0) {
-				echo "<ul>";
-				while($row2 = $result2->fetch_assoc()) {
+			if ($numSeries > 0) {
+				echo "<table class='table'>";
+				while($row2 = $result2->Fetch()) {
 					$id = $row2["id"];
 					$title = $row2["title"];
-					echo "<li><a href='/series/".$id."'>".$title."</a></li>";
+					echo "<tr><td><a href='/series/".$id."'>".$title."</a></td></tr>";
 				}
-				echo "</ul>";			
+				echo "</table>";			
 			}
-			else echo "<p>This publisher doesn't have any ".$tp_name." yet.</p>";
-		/*}
-		else echo "<div class='alert alert-warning'>
-		<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
-		<strong>Publisher not found</strong></div>";*/
+			else echo "<p>This publisher doesn't have any ".$tp_name." yet.</p>";		
 	}
 	echo "</div>";
-	/*else echo "<div class='alert alert-warning'>
-	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
-	<strong>Error:</strong> Incorrect id format. Please enter a valid id.</div>";*/
   
 ?>
 

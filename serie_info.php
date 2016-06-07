@@ -1,16 +1,15 @@
-<?php	
-	include('dbconnection.php');
+<?php		
 	include('manga_types.php');
 	require_once('includes/config.php');
 	
 	$num = filter_input(INPUT_GET,"num",FILTER_SANITIZE_STRING);
 	if (!empty($num) && ctype_digit($num))
 	{
-		$sql = "SELECT * FROM series WHERE id='".$num."'";
-		$result = $conn->query($sql);
+		$result = $db->prepare("SELECT * FROM series WHERE id=:id");
+		$result->execute(array(':id' => $num));
 		
-		if ($result->num_rows > 0) {	
-			$row = $result->fetch_assoc();
+		if ($result->rowCount() > 0) {	
+			$row = $result->Fetch();
 			
 			$title = $row["title"];
 			$orig_title = $row["orig_title"];
@@ -136,7 +135,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -228,7 +227,7 @@
 
 	
 
-<div class="container">
+<div class="container-fluid col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
   
 <!-- SHOW ERRORS -->
 <?php 
@@ -311,11 +310,11 @@ if (!empty($_SESSION['error'])) {
 			
 							
 			echo "<li><b>Writer/s:</b> "; 
-			$sql = "SELECT id,name FROM authors inner join SeriesWriters on authors.id = SeriesWriters.id_writer WHERE SeriesWriters.id_serie='".$num."' ORDER BY name";
-			$result = $conn->query($sql);		
-			if ($result->num_rows > 0) {
+			$result = $db->prepare("SELECT id,name FROM authors inner join SeriesWriters on authors.id = SeriesWriters.id_writer WHERE SeriesWriters.id_serie=:id ORDER BY name");
+			$result->execute(array('id' => $num));			
+			if ($result->rowCount() > 0) {
 				$first = 1;
-				while($row = $result->fetch_assoc()) { 
+				while($row = $result->Fetch()) { 
 					$writer = $row["name"];
 					echo "<span itemprop='author' itemscope itemtype='http://schema.org/Person' itemid='#author'>
 					<link itemprop='sameAs' href='/authors/".$row["id"]."'>
@@ -332,11 +331,11 @@ if (!empty($_SESSION['error'])) {
 			echo "</li>";
 			
 			echo "<li><b>Artist/s:</b> ";
-			$sql = "SELECT id,name FROM authors inner join SeriesArtists on authors.id = SeriesArtists.id_artist WHERE SeriesArtists.id_serie='".$num."' ORDER BY name";
-			$result = $conn->query($sql);		
-			if ($result->num_rows > 0) {
+			$result = $db->prepare("SELECT id,name FROM authors inner join SeriesArtists on authors.id = SeriesArtists.id_artist WHERE SeriesArtists.id_serie=:id ORDER BY name");
+			$result->execute(array('id' => $num));		
+			if ($result->rowCount() > 0) {
 				$first = 1;
-				while($row = $result->fetch_assoc()) { 
+				while($row = $result->Fetch()) { 
 					$artist = $row["name"];
 					echo "<span itemprop='illustrator' itemscope itemtype='http://schema.org/Person' itemid='#illustrator'>
 					<link itemprop='sameAs' href='/authors/".$row["id"]."'>
@@ -358,13 +357,11 @@ if (!empty($_SESSION['error'])) {
 			echo "<li><b>Year:</b><span itemprop='dateCreated'> ".$year."</span></li>";
 			echo "<li><b>Original volumes:</b> ".$orig_num." <span class='label label-".$orig_label."'>".$orig_state."</li>";
 			echo "<li><b>English edition:</b><span itemprop='bookEdition'> ".$edition." </span><span class='label label-".$label."'>".$state."</li>";
-			
-			
-			
-			$sql = "SELECT name,original FROM publishers WHERE id='".$publisher_id."' OR id='".$orig_publisher_id."' ORDER BY original DESC";
-			$result = $conn->query($sql);
-			if ($result->num_rows > 0) {
-				while($row = $result->fetch_assoc()) { 
+						
+			$result = $db->prepare("SELECT name,original FROM publishers WHERE id=:id_pub OR id=:id_opub ORDER BY original DESC");
+			$result->execute(array('id_pub' => $publisher_id, 'id_opub' => $orig_publisher_id));
+			if ($result->rowCount() > 0) {
+				while($row = $result->Fetch()) { 
 					$publisher = $row["name"];
 					if ($row["original"] == 0) echo "<li><b>English publisher:</b> <a href='/publishers/".$publisher_id."'><span itemprop='publisher'>".$publisher."</span></a></li>";
 					else echo "<li><b>Original publisher:</b> <a href='/publishers/".$orig_publisher_id."'>".$publisher."</a></li>";
@@ -387,9 +384,10 @@ if (!empty($_SESSION['error'])) {
 			echo "</ul><br>";
 			
 			
-			$sql = "SELECT id, id_serie, number, release_date, price, price_can, type, comments, DAY(release_date) AS day, MONTH(release_date) AS month, YEAR(release_date) AS year FROM volumes WHERE id_serie='".$num."' ORDER BY number DESC,release_date DESC";
-			$result4 = $conn->query($sql);
-			echo "<h3>Volumes in english <span class='badge'>".$result4->num_rows."</span>";
+			$result4 = $db->prepare("SELECT id, id_serie, number, release_date, price, price_can, type, comments, DAY(release_date) AS day, MONTH(release_date) AS month, YEAR(release_date) AS year FROM volumes WHERE id_serie=:id ORDER BY number DESC,release_date DESC");
+			$result4->execute(array('id' => $num));
+			$numVols = $result4->rowCount();
+			echo "<h3>Volumes in english <span class='badge'>".$numVols."</span>";
 								
 			if($user->is_admin()) echo"
 			<div class='btn-group' style='float:right'>
@@ -406,13 +404,13 @@ if (!empty($_SESSION['error'])) {
 					
 			echo "</h3><hr><br>";
 			//<a href='modVolume.php?num=".$id."'>Modify</a><a href='#' style='float:right'>Add image</a>
-			if ($result4->num_rows > 0) {
+			if ($numVols > 0) {
 				echo "<div class='portfolio'>";
-				while ($row4 = $result4->fetch_assoc()) { 
+				while ($row4 = $result4->Fetch()) { 
 					$id = $row4['id'];				
 					echo
 						"
-						  <div class='col-lg-2 col-md-2 col-sm-3 col-xs-6'>
+						  <div class='col-lg-2 col-md-3 col-sm-3 col-xs-6'>
 							<div itemprop='hasPart' itemscope itemtype='http://schema.org/PublicationVolume' itemid='#vol".$id."'>
 								<div class='thumbnail'>							
 									<link itemprop='author' href='#author'>
@@ -426,8 +424,8 @@ if (!empty($_SESSION['error'])) {
 										else if ($tp == 2) echo "<h3>#<span itemprop='volumeNumber'>".$row4["number"]."</span> END";
 										else if ($tp == 3) echo "<h3>Single vol.";
 										else echo "<h3>#<span itemprop='volumeNumber'>".$row4["number"]."</span>";
-										echo "</h3>";										
-										//$date = $row4['release_date'];
+										echo "</h3>";									
+										
 										$year = $row4['year'];
 										$month = $row4['month'];
 										$day = $row4['day'];
@@ -444,7 +442,7 @@ if (!empty($_SESSION['error'])) {
 											$bd = new DateTimeImmutable($year.'-'.$month.'-'.$day);
 											$date = $bd->format("F d, Y");
 										}										
-										//else $date = $year."/".$month."/".$day;
+										
 										echo "<span itemprop='datePublished'>".$date."</span><br>";										
 										$price = $row4['price'];
 										if ($price == '' || $price == 0) echo "$ ??";
@@ -461,15 +459,10 @@ if (!empty($_SESSION['error'])) {
 				}
 				echo "</div>";
 			}	
-			echo "</div>";					
-		//}
-		/*else echo "<div class='alert alert-warning'>
-		<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
-		<strong>Serie not found</strong></div>";*/
+			echo "</div>";	
+		
 	}
-	/*else echo "<div class='alert alert-warning'>
-	<a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
-	<strong>Error:</strong> Incorrect id format. Please enter a valid id.</div>";*/
+	
   
 ?>
 

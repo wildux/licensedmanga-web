@@ -1,5 +1,4 @@
-<?php
-	include('dbconnection.php');
+<?php	
 	require_once('includes/config.php');
 ?>
 
@@ -124,7 +123,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -214,7 +213,7 @@
   
 </nav>
 
-<div class="container-fluid col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
+<div class="container-fluid col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
 
 <!-- SHOW ERRORS -->
 <?php 
@@ -227,8 +226,8 @@ if (!empty($_SESSION['error'])) {
 
 //<!-- SQL -->
 	$sql = "SELECT id,name FROM authors ORDER BY name";
-	$result = $conn->query($sql);
-    $authors = $result->num_rows;
+	$result = $db->query($sql);
+    $authors = $result->rowCount();
 	echo "<h2>Authors <span class='badge'>".$authors."</span></h2>";
 ?>
 
@@ -273,8 +272,8 @@ if (!empty($_SESSION['error'])) {
 <?php		
 	
 	
-	if ($result->num_rows > 0) {
-		$row = $result->fetch_assoc();
+	if ($authors > 0) {
+		$row = $result->Fetch();
 		$name = $row["name"];
 		$initial = $name[0];
 		if(ctype_digit($initial)) $initial = '#';
@@ -289,7 +288,7 @@ if (!empty($_SESSION['error'])) {
 		".$name."</a>";					
 		$num_elements = 1;
 		
-		while($row = $result->fetch_assoc()) {			
+		while($row = $result->Fetch()) {			
 			$name = $row["name"];
 			$id = $row["id"];
 			$initial_tmp = $name[0];

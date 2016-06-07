@@ -1,5 +1,4 @@
-<?php	
-	include('dbconnection.php');
+<?php		
 	require_once('includes/config.php');
 ?>
 
@@ -90,7 +89,7 @@
 <nav class="navbar navbar-inverse navbar-static-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/blog">
 		  <img src="/images/lm2.jpg" width="30px">
 	  </a>
     </div>
@@ -182,7 +181,7 @@
 
 
 
-<div class="container">
+<div class="container-fluid col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
 	
 <!-- SHOW ERRORS -->
 <?php 
@@ -200,16 +199,18 @@ if (!empty($_SESSION['error'])) {
 
 
 <?php
-    $year = 2016; //Agafar actual
+	$today = new DateTime();
+	$year = $today->format("Y");    
          
-    $sql = "SELECT a.id_serie,month(a.day) as date,s.title 
+    $result = $db->prepare("SELECT a.id_serie,month(a.day) as date,s.title 
     FROM announcements as a JOIN series as s ON a.id_serie = s.id 
-    WHERE YEAR(a.day) = '".$year."' 
-    ORDER by a.day";
-    $result = $conn->query($sql); 
+    WHERE YEAR(a.day) =:year
+    ORDER by a.day");
+    
+    $result->execute(array('year' => $year)); 
         
-    if ($result->num_rows > 0) {
-		$row = $result->fetch_assoc();
+    if ($result->rowCount() > 0) {
+		$row = $result->Fetch();
 		$month = $row["date"]; 
 		$id = $row["id_serie"];
 		$title = $row["title"];
@@ -218,7 +219,7 @@ if (!empty($_SESSION['error'])) {
 		echo "<h4>".$monthName." ".$year."</h4><ul>"; 
 		echo "<li><a href='/series/".$id."'>".$title."</a></li>";
 		
-		while($row = $result->fetch_assoc()) {
+		while($row = $result->Fetch()) {
 			$title = $row["title"];
 			$date = $row["date"];
 			$id = $row["id_serie"];
